@@ -51,17 +51,6 @@ class BaseTrainer:
         self.data_time = AverageMeter()
         self.train_time = AverageMeter()
 
-        # cnf steps
-        # self.cnf_start_step = int(args.train_steps * args.cnf_start_step)
-        self.use_cnf = False
-        self.cnf_start_step = 0
-        self.cnf_end_step = int(args.train_steps * args.cnf_end_step)
-        print(
-            "CNF training start and end steps: {}, {}".format(
-                self.cnf_start_step, self.cnf_end_step
-            )
-        )
-
     def lr_schedule(self, step):
         if self.args.warmup > 0:
             for g in self.optimizer.param_groups:

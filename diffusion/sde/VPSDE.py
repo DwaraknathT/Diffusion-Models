@@ -37,11 +37,7 @@ class VPSDE(AbstractSDE):
         # ODE solver params
         self.ode_solver_tol = args.ode_solver_tol
 
-    def drift(
-        self,
-        data: torch.tensor,
-        t: torch.tensor,
-    ) -> torch.tensor:
+    def drift(self, data: torch.tensor, t: torch.tensor) -> torch.tensor:
         """Computes the drift of the VPSDE at time t.
         Drift = -1/2 * (beta_min + t (beta_max - beta_min)) * x(0)
 
@@ -55,11 +51,7 @@ class VPSDE(AbstractSDE):
         drift_coef = -0.5 * (self.beta_min + t * (self.beta_max - self.beta_min))
         return fill_tail_dims(drift_coef, data) * data
 
-    def diffusion(
-        self,
-        data: torch.tensor,
-        t: torch.tensor,
-    ) -> torch.tensor:
+    def diffusion(self, data: torch.tensor, t: torch.tensor) -> torch.tensor:
         """Computes the diffusion of the VPSDE at time t
         Diffusion = sqrt(beta_min + t (beta_max - beta_min))
 
@@ -80,11 +72,7 @@ class VPSDE(AbstractSDE):
     ) -> torch.tensor:
         return torch.sqrt(self.var_t(data, t))
 
-    def var_t(
-        self,
-        data: torch.tensor,
-        t: torch.tensor,
-    ) -> torch.tensor:
+    def var_t(self, data: torch.tensor, t: torch.tensor) -> torch.tensor:
         """Variance of the marginal distribution p_t(x) at time t
         It is given by
         var(t) = (1 - 1/2 * t^2 * (beta_max - beta_min) - t * beta_min)
@@ -99,11 +87,7 @@ class VPSDE(AbstractSDE):
         var = 1.0 - torch.exp(log_coeff)
         return fill_tail_dims(var, data)
 
-    def mean_t(
-        self,
-        data: torch.tensor,
-        t: torch.tensor,
-    ) -> torch.tensor:
+    def mean_t(self, data: torch.tensor, t: torch.tensor) -> torch.tensor:
         """Mean of the marginal distribution p_t(x) at time t
         It is given by
         mean(t) = exp(-1/4 * t^2 * (beta_max - beta_min) - 1/2 * t * beta_min) * data
@@ -121,11 +105,7 @@ class VPSDE(AbstractSDE):
         mean = torch.exp(fill_tail_dims(log_mean_coeff, data)) * data
         return mean
 
-    def marginal_distribution(
-        self,
-        data: torch.tensor,
-        t: torch.tensor,
-    ) -> tuple:
+    def marginal_distribution(self, data: torch.tensor, t: torch.tensor) -> tuple:
         """Returns the parameters of the marginal distribution p_t(x)
 
         Args:
@@ -140,10 +120,7 @@ class VPSDE(AbstractSDE):
         return mean, var, std
 
     def sample(
-        self,
-        score_function: nn.Module,
-        sample_shape: tuple,
-        noise: torch.tensor = None,
+        self, score_function: nn.Module, sample_shape: tuple, noise: torch.tensor = None
     ) -> torch.tensor:
         def ode_function(t, x):
             global nfe_counter
