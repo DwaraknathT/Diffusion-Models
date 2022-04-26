@@ -1,2 +1,2 @@
-# Diffusion-Models
-Research on diffusion models using Stochastic Differential Equations. 
+# diffusion
+Research on diffusion models and neural ODEs 
