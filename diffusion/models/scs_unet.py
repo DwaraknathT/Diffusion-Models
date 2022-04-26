@@ -52,7 +52,13 @@ class Up(nn.Module):
         super().__init__()
 
         self.up = CosSimConvTranspose2d(
-            in_channels, in_channels // 2, kernel_size=2, stride=2
+            in_channels,
+            in_channels // 2,
+            kernel_size=4,
+            stride=2,
+            padding=1,
+            bias=False,
+            p=False,
         )
         self.conv = DoubleConv(in_channels, out_channels)
 
