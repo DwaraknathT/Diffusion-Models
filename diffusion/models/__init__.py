@@ -1,3 +1,3 @@
 from .unet import Unet
-from .scs_unet import SCS_Unet
+from .convmixer import convmixer
 from .registry import get_model
