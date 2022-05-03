@@ -1,3 +1,3 @@
 from .unet import Unet
-from .convmixer import convmixer
+from .equivariant_unet import EquivariantUnet
 from .registry import get_model

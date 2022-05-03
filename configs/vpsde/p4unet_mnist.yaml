@@ -1,10 +1,6 @@
 # model params 
-model: convmixer
+model: p4_unet
 time_emb: false
-dim: 256
-patch_size: 3
-kernel_size: 5 
-depth: 8 
 
 # sde params 
 sde: vpsde
@@ -40,7 +36,7 @@ workers: 4
 batch_size: 128 
 num_channels: 1 
 num_classes: 10 
-img_size: 32
+img_size: 28
 
 # data process params 
 logit_transform: false 
