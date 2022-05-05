@@ -36,7 +36,7 @@ workers: 4
 batch_size: 128 
 num_channels: 1 
 num_classes: 10 
-img_size: 28
+img_size: 32
 
 # data process params 
 logit_transform: false 

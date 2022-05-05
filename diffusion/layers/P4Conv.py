@@ -35,17 +35,16 @@ class P4ConvZ2(nn.Module):
         # o/p stabilizer is 4, as there are 4 rotations
         self.output_stabilizer = 4
 
-        self.floatTensor = (
-            torch.FloatTensor
-            if not torch.cuda.is_available()
-            else torch.cuda.FloatTensor
-        )
+        in_chns = in_channels // groups
+        out_chns = out_channels
         self.weight = nn.Parameter(
-            self.floatTensor(out_channels, in_channels // groups, *self.kernel_size),
+            torch.FloatTensor(out_chns, in_chns, *self.kernel_size),
             requires_grad=True,
         )
         if bias:
-            self.bias = nn.Parameter(self.floatTensor(out_channels), requires_grad=True)
+            self.bias = nn.Parameter(
+                torch.FloatTensor(out_channels), requires_grad=True
+            )
         else:
             self.bias = None
 
@@ -118,22 +117,18 @@ class P4ConvP4(nn.Module):
         # o/p stabilizer is 4, as there are 4 rotations
         self.output_stabilizer = 4
 
-        self.floatTensor = (
-            torch.FloatTensor
-            if not torch.cuda.is_available()
-            else torch.cuda.FloatTensor
-        )
+        in_chns = in_channels // groups
+        out_chns = out_channels
         self.weight = nn.Parameter(
-            self.floatTensor(
-                out_channels,
-                in_channels // groups,
-                self.input_stabilizer,
-                *self.kernel_size
+            torch.FloatTensor(
+                out_chns, in_chns, self.input_stabilizer, *self.kernel_size
             ),
             requires_grad=True,
         )
         if bias:
-            self.bias = nn.Parameter(self.floatTensor(out_channels), requires_grad=True)
+            self.bias = nn.Parameter(
+                torch.FloatTensor(out_channels), requires_grad=True
+            )
         else:
             self.bias = None
 

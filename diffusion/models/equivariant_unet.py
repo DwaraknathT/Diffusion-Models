@@ -53,7 +53,7 @@ class Down(nn.Module):
 class Up(nn.Module):
     """Upscaling then double conv"""
 
-    def __init__(self, in_channels, out_channels, bilinear=True):
+    def __init__(self, in_channels, out_channels):
         super().__init__()
         self.up = P4ConvTransposeP4(
             in_channels, in_channels // 2, kernel_size=2, stride=2
@@ -63,8 +63,8 @@ class Up(nn.Module):
     def forward(self, x1, x2):
         x1 = self.up(x1)
         # input is CHW
-        diffY = x2.size()[2] - x1.size()[2]
-        diffX = x2.size()[3] - x1.size()[3]
+        diffY = x2.size()[-2] - x1.size()[-2]
+        diffX = x2.size()[-1] - x1.size()[-1]
 
         x1 = F.pad(x1, [diffX // 2, diffX - diffX // 2, diffY // 2, diffY - diffY // 2])
         x = torch.cat([x2, x1], dim=1)
@@ -87,23 +87,21 @@ class EquivariantUnet(nn.Module):
         self.out_channels = out_channels
         self.bilinear = bilinear
 
-        self.inc = DoubleConv(n_channels, 64, input=True)
-        self.down1 = Down(64, 128)
-        self.down2 = Down(128, 256)
-        self.down3 = Down(256, 512)
-        factor = 2 if bilinear else 1
-        self.down4 = Down(512, 1024 // factor)
-        self.up1 = Up(1024, 512 // factor, bilinear)
-        self.up2 = Up(512, 256 // factor, bilinear)
-        self.up3 = Up(256, 128 // factor, bilinear)
-        self.up4 = Up(128, 64, bilinear)
-        self.outc = OutConv(64, out_channels)
+        self.inc = DoubleConv(n_channels + 1, 64 // 4, input=True)
+        self.down1 = Down(64 // 4, 128 // 4)
+        self.down2 = Down(128 // 4, 256 // 4)
+        self.down3 = Down(256 // 4, 512 // 4)
+        self.down4 = Down(512 // 4, 1024 // 4)
+        self.up1 = Up(1024 // 4, 512 // 4)
+        self.up2 = Up(512 // 4, 256 // 4)
+        self.up3 = Up(256 // 4, 128 // 4)
+        self.up4 = Up(128 // 4, 64 // 4)
+        self.outc = OutConv(64 // 4, out_channels)
 
-    def forward(self, x, t=None):
-        if t is not None:
-            b, h, w = x.shape[0], x.shape[-2], x.shape[-1]
-            t = einops.repeat(t, "b -> b 1 h w", b=b, h=h, w=w)
-            x = torch.cat([x, t], dim=1)
+    def forward(self, x, t):
+        b, h, w = x.shape[0], x.shape[-2], x.shape[-1]
+        t = einops.repeat(t, "b -> b 1 h w", b=b, h=h, w=w)
+        x = torch.cat([x, t], dim=1)
         x1 = self.inc(x)
         x2 = self.down1(x1)
         x3 = self.down2(x2)
@@ -113,7 +111,7 @@ class EquivariantUnet(nn.Module):
         x = self.up2(x, x3)
         x = self.up3(x, x2)
         x = self.up4(x, x1)
-        logits = self.outc(x)
+        logits = self.outc(x).max(2).values
         return logits
 
 
@@ -136,9 +134,28 @@ def test():
         y2 = _grot90(conv2(_grot90(x, k)), -k)
         print(k, (y - y2).abs().max().item())
 
+    print("Up test")
+    conv2 = Up(1024, 512)
+    x1 = torch.rand(1, 1024, 4, 1, 1)
+    x2 = torch.rand(1, 512, 4, 3, 3)
+    y = conv2(x1, x2)
+    print(x.size(), "->", y.size())
+    for k in range(1, 4):
+        y2 = _grot90(conv2(_grot90(x1, k), _grot90(x2, k)), -k)
+        print(k, (y - y2).abs().max().item())
+
+    print("OutConv test")
+    conv2 = OutConv(3, 10)
+    x = torch.rand(7, 3, 4, 256, 256)
+    y = conv2(x)
+    print(x.size(), "->", y.size())
+    for k in range(1, 4):
+        y2 = _grot90(conv2(_grot90(x, k)), -k)
+        print(k, (y - y2).abs().max().item())
+
     print("Equivariant Unet test")
-    conv2 = EquivariantUnet(3, 3)
-    x = torch.rand(7, 3, 256, 256)
+    conv2 = EquivariantUnet(1, 1).cuda()
+    x = torch.rand(1, 1, 32, 32).cuda()
     y = conv2(x)
     print(x.size(), "->", y.size())
     for k in range(1, 4):
