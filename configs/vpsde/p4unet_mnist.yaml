@@ -1,0 +1,58 @@
+# model params 
+model: p4_unet
+time_emb: false
+
+# sde params 
+sde: vpsde
+train_time_eps: 0.00001
+sample_time_eps: 0.001
+beta_min: 0.1 
+beta_max: 20 
+time_steps: 1000
+
+# training params 
+train_steps: 1300001
+log_step: 100
+eval_step: 1000
+save_step: 5000
+trainer: base_trainer
+likelihood_weighting: false 
+reduce_mean: false 
+fp16: false 
+mix_precision: no 
+scale_timesteps: false
+cnf_start_step: 0.9 
+cnf_end_step: 1
+cnf_noise_type: gaussian
+
+# sampling params 
+ode_solver_tol: 0.00001
+num_samples: 64 
+sample_step: 1000
+
+# dataset params
+dataset: mnist 
+workers: 4 
+batch_size: 128 
+num_channels: 1 
+num_classes: 10 
+img_size: 32
+
+# data process params 
+logit_transform: false 
+alpha: 0.95 
+uniform_dequantize: true 
+gaussian_dequantize: false 
+data_centered: false 
+horizontal_flip: false
+clamp: true 
+normalize_image: true 
+
+# optimizer params 
+lr: 0.0002
+optim: adam
+weight_decay: 0 
+beta1: 0.9 
+eps: 0.00000001
+warmup: 5000
+grad_clip: 1.0
