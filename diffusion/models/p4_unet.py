@@ -5,8 +5,8 @@ import torch.nn.functional as F
 import einops
 from .registry import register
 from ..layers.utils import _grot90
-from ..layers.P4Conv import P4ConvZ2, P4ConvP4
-from ..layers.P4ConvTranspose import P4ConvTransposeP4
+from ..layers.p4conv import P4ConvZ2, P4ConvP4
+from ..layers.p4convtranspose import P4ConvTransposeP4
 
 
 class DoubleConv(nn.Module):
@@ -118,7 +118,7 @@ class EquivariantUnet(nn.Module):
 def test():
     print("Double conv test")
     conv2 = DoubleConv(3, 10)
-    x = torch.rand(7, 3, 4, 256, 256)
+    x = torch.rand(7, 3, 4, 32, 32)
     y = conv2(x)
     print(x.size(), "->", y.size())
     for k in range(1, 4):
@@ -127,7 +127,7 @@ def test():
 
     print("Down test")
     conv2 = Down(3, 10)
-    x = torch.rand(7, 3, 4, 256, 256)
+    x = torch.rand(7, 3, 4, 32, 32)
     y = conv2(x)
     print(x.size(), "->", y.size())
     for k in range(1, 4):
@@ -137,7 +137,7 @@ def test():
     print("Up test")
     conv2 = Up(1024, 512)
     x1 = torch.rand(1, 1024, 4, 1, 1)
-    x2 = torch.rand(1, 512, 4, 3, 3)
+    x2 = torch.rand(1, 512, 4, 2, 2)
     y = conv2(x1, x2)
     print(x.size(), "->", y.size())
     for k in range(1, 4):
@@ -146,7 +146,7 @@ def test():
 
     print("OutConv test")
     conv2 = OutConv(3, 10)
-    x = torch.rand(7, 3, 4, 256, 256)
+    x = torch.rand(7, 3, 4, 32, 32)
     y = conv2(x)
     print(x.size(), "->", y.size())
     for k in range(1, 4):
@@ -156,11 +156,17 @@ def test():
     print("Equivariant Unet test")
     conv2 = EquivariantUnet(1, 1).cuda()
     x = torch.rand(1, 1, 32, 32).cuda()
-    y = conv2(x)
+    t = torch.rand(1).cuda()
+    y = conv2(x, t)
     print(x.size(), "->", y.size())
     for k in range(1, 4):
-        y2 = _grot90(conv2(torch.rot90(x, k, (2, 3))), -k)
+        rot_input = torch.rot90(x, k, (2, 3))
+        y2 = torch.rot90(conv2(rot_input, t), -k, (2, 3))
         print(k, (y - y2).abs().max().item())
+        # # invarance check
+        # y_in = y.max(2).values
+        # y2_in = y2.max(2).values
+        # print(k, (y_in - y2_in).abs().max().item())
 
 
 @register
